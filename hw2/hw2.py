@@ -7,7 +7,7 @@ Created on 06/04/2021
 """
 
 def func():
-    print('func')
+    print('elad')
 
 
 def main():
