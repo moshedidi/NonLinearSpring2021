@@ -6,6 +6,9 @@ Created on 06/04/2021
 
 """
 
+def func():
+    print('func')
+
 
 def main():
     pass
