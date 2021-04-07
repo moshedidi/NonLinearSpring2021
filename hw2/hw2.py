@@ -125,12 +125,24 @@ def generic_bisect(f, df, l, u, eps, k):
     return x, fv
 
 
+def sectionC():
+    l = -1
+    u = 0
+    x0 = 0.5554
+    k = 2
+    x, fv = generic_newton(f=lambda x: -3.55 * np.power(x, 3) + 1.1 * np.square(x)
+                                       + 0.765 * x - 0.74, df=lambda x: -10.65 * np.square(x) + 2.2 * x + 0.765
+                           , ddf=lambda x: -21.3 * x + 2.2, x0=x0, eps=0.0001, k=k)
+    print("good")
+
+
 def main():
     l = -1
     u = 5
     x0 = (u + l) / 2
-    k = -1
+    k = 50
     eps = eps1 = eps2 = 1 / np.power(10, 6)
+    sectionC()
     x_bisect, fv_bisect = generic_bisect(f, df, l, u, eps, k)
     plt.semilogy(np.arange(len(fv_bisect)), np.array(fv_bisect) - 3.5825439993037,
                  label=" bisect ")
