@@ -57,16 +57,21 @@ def generic_gs(f, l, u, eps, k):
     tau = (3 - np.sqrt(5)) / 2
     x2 = l + tau * (u - l)
     x3 = l + (1 - tau) * (u - l)
+    f_x2,f_x3 = f(x2), f(x3)
     while np.abs(u - l) >= eps and counter <= k:
         fv.append(f((u + l) / 2))
-        if f(x2) < f(x3):
+        if f_x2 < f_x3:
             u = x3
             x3 = x2
+            f_x3 = f_x2
             x2 = l + tau * (u - l)
+            f_x2 = f(x2)
         else:
             l = x2
             x2 = x3
+            f_x2 = f_x3
             x3 = l + (1 - tau) * (u - l)
+            f_x3 = f(x3)
         counter += 1
     fv.append(f((u + l) / 2))
     return (l + u) / 2, fv
