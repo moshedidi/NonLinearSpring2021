@@ -12,7 +12,7 @@ Created on 06/04/2021
 
 def validation(k, l=None, u=None, eps1=None, eps2=None):
     valid = True
-    error_message = ""
+    error_message = ''
     if l is not None and u is not None:
         try:
             if l >= u:
@@ -130,16 +130,74 @@ def generic_bisect(f, df, l, u, eps, k):
     return x, fv
 
 
-def sectionC():
-    l = -1
-    u = 0
-    x0 = 0.5554
-    k = 2
-    x, fv = generic_newton(f=lambda x: -3.55 * np.power(x, 3) + 1.1 * np.square(x)
-                                       + 0.765 * x - 0.74, df=lambda x: -10.65 * np.square(x) + 2.2 * x + 0.765
-                           , ddf=lambda x: -21.3 * x + 2.2, x0=x0, eps=0.0001, k=k)
-    print("good")
+# def sectionC():
+#     l = -1
+#     u = 0
+#     x0 = 0.5554
+#     k = 2
+#     x, fv = generic_newton(f=lambda x: -3.55 * np.power(x, 3) + 1.1 * np.square(x)
+#                                        + 0.765 * x - 0.74, df=lambda x: -10.65 * np.square(x) + 2.2 * x + 0.765
+#                            , ddf=lambda x: -21.3 * x + 2.2, x0=x0, eps=0.0001, k=k)
+#     print("good")
 
+def phi(t, mu, a, b, c):
+    return mu * np.square(t - a) + np.abs(t - b) + np.abs(t - c)
+
+
+def gs_denoise_step(mu, a, b, c):
+    """Running the golden section algorithm """
+    eps = 1 / np.power(10, 10)
+    tau = (3 - np.sqrt(5)) / 2
+    l = np.min([a, b, c]) - 1
+    u = np.max([a, b, c]) + 1
+    t2 = l + tau * (u - l)
+    t3 = l + (1 - tau) * (u - l)
+    f_t2 = phi(t2, mu, a, b, c)
+    f_t3 = phi(t3, mu, a, b, c)
+    while np.abs(u - l) >= eps:
+        if f_t2 < f_t3:
+            u = t3
+            t3 = t2
+            f_t3 = f_t2
+            t2 = l + tau * (u - l)
+            f_t2 = phi(t2, mu, a, b, c)
+        else:
+            l = t2
+            t2 = t3
+            f_t2 = f_t3
+            t3 = l + (1 - tau) * (u - l)
+            f_t3 = phi(t3, mu, a, b, c)
+    return (l + u) / 2
+
+def gs_denoise(s, alpha,N):
+    x = s
+    for i in range(N):
+        x[0] = gs_denoise_step(alpha, s[0], 0, x[1])
+        for k in range(1,len(s)-1):
+            x[k] = gs_denoise_step(alpha, s[k], x[k-1], x[k+1])
+        x[len(x)-1] = gs_denoise_step(alpha, s[len(x)-1], x[len(x)-1], 0)
+    return x
+
+def script_ex_4():
+    # plotting the real discrete signal
+    real_s_1 = [1.] * 40
+    real_s_0 = [0.] * 40
+
+    plt.plot(range(40), real_s_1, 'black', linewidth=0.7)
+    plt.plot(range(41, 81), real_s_0, 'black', linewidth=0.7)
+
+    # solving the problem
+    s = np.array([[1.] * 40 + [0.] * 40]).T + 0.1 * np.random.randn(80, 1)  # noised signal
+    # x1 = gs_denoise(s, 0.5, 100)
+    # x2 = gs_denoise(s, 0.5, 1000)
+    x3 = gs_denoise(s, 0.5, 10000)
+
+    # plt.plot(range(80), s, 'cyan', linewidth=0.7,label = "s")
+    # plt.plot(range(80), x1, 'red', linewidth=0.7,label = "x1")
+    # plt.plot(range(80), x2, 'green', linewidth=0.7,label = "x2")
+    plt.plot(range(80), x3, 'blue', linewidth=0.7,label = "x3")
+    plt.legend()
+    plt.show()
 
 def main():
     l = -1
@@ -147,7 +205,6 @@ def main():
     x0 = (u + l) / 2
     k = 50
     eps = eps1 = eps2 = 1 / np.power(10, 6)
-    sectionC()
     x_bisect, fv_bisect = generic_bisect(f, df, l, u, eps, k)
     plt.semilogy(np.arange(len(fv_bisect)), np.array(fv_bisect) - 3.5825439993037,
                  label=" bisect ")
@@ -163,6 +220,7 @@ def main():
     plt.title("logarithmic difference with respect to iterations")
     plt.legend()
     plt.show()
+    script_ex_4()
 
 
 if __name__ == '__main__':
