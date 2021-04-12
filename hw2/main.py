@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    # main for section 1
+    ####### main for section 1 #######
     l = -1
     u = 5
     x0 = (u + l) / 2
@@ -27,10 +27,10 @@ def main():
     plt.title("logarithmic difference with respect to iterations")
     plt.legend()
     plt.show()
-    # main for section 3
+    ####### main for section 3 #######
     r = Section3.ex2(-1, 0, 1 / np.power(10, 5))
     print("the argmin for p(x) is :" + str(r))
-    # main for section 4
+    ####### main for section 4 #######
     Section4.script_ex_4()
 
 
