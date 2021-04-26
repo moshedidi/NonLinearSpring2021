@@ -100,8 +100,101 @@ def q1():
     plt.show()
 
 
+""" Q2 """
+O = np.array([[1, 0, 0, -1, -1, -1, -1, -1, 0],
+              [0, 1, -1, -1, -1, -1, -1, -1, -1],
+              [1, 1, -1, -1, -1, -1, -1, -1, -1],
+              [0, 0, -1, 1, -1, -1, -1, -1, -1],
+              [-1, -1, -1, 1, 1, 1, 1, 1, 0],
+              [-1, -1, 1, 1, 1, 0, 1, 0, 1],
+              [-1, -1, 1, 1, 1, 1, 1, 1, 1],
+              [-1, -1, 1, 1, 0, 1, 1, 0, 0]])
+
+
+def S(X):
+    res = 0
+    for i in range(len(X)):
+        for j in range(len(X)):
+            res += np.square(np.square(np.linalg.norm(X[i, :] - X[j, :])) - D(O[i, :], O[j, :]))
+    return res
+
+
+def gS(X):
+    res = []
+    for i in range(len(X)):
+        res.append(
+            sum([(X[i, :] - X[j, :]) *
+                 (np.square(np.linalg.norm(X[i, :] - X[j, :])) - D(O[i, :], O[j, :])) for j in range(len(X))]))
+    return np.array(res)
+
+
+def D(o1, o2):
+    return np.linalg.norm(o1 - o2)
+
+
+def q2():
+    s = 1 / 1000
+    x0 = np.random.rand(8, 2)
+    eps = 1 / np.power(10, 5)
+
+    _const = generic_grad(S, gS, const_step(s), x0, eps)
+    plt.semilogy(np.arange(len(_const[1])), _const[1], label="const_step")
+
+    plt.title("S values")
+    plt.legend()
+    plt.show()
+
+    plt.scatter(_const[0][:, 0][:4], _const[0][:, 1][:4], label="const_step", color='blue')
+    plt.scatter(_const[0][:, 0][4:], _const[0][:, 1][4:], label="const_step", color='red')
+
+    plt.title("S values")
+    plt.legend()
+    plt.show()
+
+
+''' Q3 '''
+
+
+def f_q3(x):
+    return np.square(x[0]) + np.power(x[1], 4) - np.square(x[1])
+
+
+def df_q3(x):
+    return np.array([2 * x[0], 4 * np.power(x[1], 3) - 2 * x[1]])
+
+
+def generic_grad_noise(f, gf, lsearch, x0, eps, mu, sigma):
+    xk = x0
+    xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk) + np.random.normal(loc=mu, scale=sigma, size=(len(xk)))
+    fs, gs, ts = [f(xk)], [np.linalg.norm(gf(xk))], [time.time()]
+    while np.abs(f(xk) - f(xk_1)) > eps:
+        xk = xk_1
+        xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk)
+        fs.append(f(xk))
+        gs.append(np.linalg.norm(gf(xk)))
+        ts.append(time.time())
+    return xk, fs, gs, ts
+
+
+def ex3(mu, sigma, x0, epsilon):
+    x0 = np.array(x0)
+    res = generic_grad(f_q3, df_q3, const_step(1 / 10), x0, epsilon)
+    res_noise = generic_grad_noise(f_q3, df_q3, const_step(1 / 10), x0, epsilon, mu, sigma)
+    print(res)
+    print(res_noise)
+
+    plt.loglog(np.arange(len(res[1])), res[1], label="res")
+    plt.loglog(np.arange(len(res_noise[1])), res_noise[1], label="res_noise")
+
+    plt.title("EX3")
+    plt.legend()
+    plt.show()
+
+
 def main():
-    q1()
+    # q1()
+    # q2()
+    ex3(0, 0.0005, [100, 0], 1 / np.power(10, 8))
 
 
 if __name__ == '__main__':
