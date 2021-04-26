@@ -7,6 +7,7 @@ Created on 22/04/2021
 """
 import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 # TODO: check input
@@ -34,7 +35,13 @@ def const_step(s):
 
 def exact_quad(A):
     np.linalg.cholesky(A)  # TODO: check
-    return lambda f, xk, gk: np.square(np.linalg.norm(gk)) / (np.dot(gk.T, A).dot(gk))
+    return lambda f, xk, gk: np.square((np.linalg.norm(gk)) / (np.linalg.norm(np.dot(A, gk))))
+    # def lsearch(f, xk, gk):
+    #     # return 0.5 * np.square(np.linalg.norm(gk)) / (np.dot(gk.T, A).dot(gk))
+    #
+    #     # return (np.dot(xk, A).dot(gk) - np.dot(gk, A).dot(xk)) / 2 * (np.dot(gk, A).dot(gk))
+    #
+    # return lsearch
 
 
 def back(alpha, beta, s):
@@ -61,11 +68,36 @@ def generic_grad(f, gf, lsearch, x0, eps):
 
 
 def q1():
-    print(generic_grad(f,
-                       gf,
-                       back(alpha, beta, s),
-                       np.array([1, 1, 1, 1, 1]),
-                       1 / np.power(10, 5)))
+    s = 1 / (2 * np.max(np.linalg.eigvals(np.dot(A.T, A))))
+    x0 = np.array([1, 1, 1, 1, 1])
+    eps = 1 / np.power(10, 5)
+
+    _const = generic_grad(f, gf, const_step(s), x0, eps)
+    _exact = generic_grad(f, gf, exact_quad(A), x0, eps)
+    _back = generic_grad(f, gf, back(0.5, 0.5, 1), x0, eps)
+    # plt.loglog(np.arange(len(_const[1])), _const[1], label="const_step")
+    # plt.loglog(np.arange(len(_exact[1])), _exact[1], label="exact_quad")
+    # plt.loglog(np.arange(len(_back[1])), _back[1], label="back")
+
+    # plt.title("logarithmic difference with respect to iterations")
+    # plt.legend()
+    # plt.show()
+
+    plt.loglog(np.arange(len(_const[2])), _const[2], label="const_step")
+    # plt.loglog(np.arange(len(_exact[2])), _exact[2], label="exact_quad")
+    plt.loglog(np.arange(len(_back[2])), _back[2], label="back")
+
+    plt.title("Gradient norm")
+    plt.legend()
+    plt.show()
+
+    plt.semilogy(_const[3], _const[2], label="const_step")
+    # plt.loglog(np.arange(len(_exact[2])), _exact[2], label="exact_quad")
+    plt.semilogy(_back[3], _back[2], label="back")
+
+    plt.title("Gradient norm for time")
+    plt.legend()
+    plt.show()
 
 
 def main():
