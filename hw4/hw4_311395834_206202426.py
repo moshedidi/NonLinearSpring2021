@@ -34,14 +34,17 @@ def const_step(s):
 
 
 def exact_quad(A):
-    np.linalg.cholesky(A)  # TODO: check
-    return lambda f, xk, gk: np.square((np.linalg.norm(gk)) / (np.linalg.norm(np.dot(A, gk))))
-    # def lsearch(f, xk, gk):
-    #     # return 0.5 * np.square(np.linalg.norm(gk)) / (np.dot(gk.T, A).dot(gk))
-    #
-    #     # return (np.dot(xk, A).dot(gk) - np.dot(gk, A).dot(xk)) / 2 * (np.dot(gk, A).dot(gk))
-    #
-    # return lsearch
+    # TODO: check
+    # return lambda f, xk, gk: np.square((np.linalg.norm(gk)) / (np.linalg.norm(np.dot(A, gk))))
+    ATA = np.dot(A.T, A)
+    np.linalg.cholesky(ATA)
+
+    def lsearch(f, xk, gk):
+        return 0.5 * np.square(np.linalg.norm(gk)) / np.square(np.linalg.norm(np.dot(A, gk)))
+
+        # return (np.dot(xk, A).dot(gk) - np.dot(gk, A).dot(xk)) / 2 * (np.dot(gk, A).dot(gk))
+
+    return lsearch
 
 
 def back(alpha, beta, s):
@@ -57,7 +60,10 @@ def back(alpha, beta, s):
 def generic_grad(f, gf, lsearch, x0, eps):
     xk = x0
     xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk)
-    fs, gs, ts = [f(xk)], [np.linalg.norm(gf(xk))], [time.time()]
+    fs, gs, ts = [], [], []
+    fs.append(f(xk))
+    gs.append(np.linalg.norm(gf(xk)))
+    ts.append(time.time())
     while np.abs(f(xk) - f(xk_1)) > eps:
         xk = xk_1
         xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk)
@@ -75,16 +81,15 @@ def q1():
     _const = generic_grad(f, gf, const_step(s), x0, eps)
     _exact = generic_grad(f, gf, exact_quad(A), x0, eps)
     _back = generic_grad(f, gf, back(0.5, 0.5, 1), x0, eps)
-    # plt.loglog(np.arange(len(_const[1])), _const[1], label="const_step")
-    # plt.loglog(np.arange(len(_exact[1])), _exact[1], label="exact_quad")
-    # plt.loglog(np.arange(len(_back[1])), _back[1], label="back")
-
-    # plt.title("logarithmic difference with respect to iterations")
-    # plt.legend()
-    # plt.show()
+    plt.loglog(np.arange(0,len(_const[1])), _const[1][0], label="const_step")
+    plt.loglog(np.arange(len(_exact[1])), _exact[1], label="exact_quad")
+    plt.loglog(np.arange(len(_back[1])), _back[1], label="back")
+    plt.title("logarithmic difference with respect to iterations")
+    plt.legend()
+    plt.show()
 
     plt.loglog(np.arange(len(_const[2])), _const[2], label="const_step")
-    # plt.loglog(np.arange(len(_exact[2])), _exact[2], label="exact_quad")
+    plt.loglog(np.arange(len(_exact[2])), _exact[2], label="exact_quad")
     plt.loglog(np.arange(len(_back[2])), _back[2], label="back")
 
     plt.title("Gradient norm")
@@ -192,9 +197,9 @@ def ex3(mu, sigma, x0, epsilon):
 
 
 def main():
-    # q1()
+    q1()
     # q2()
-    ex3(0, 0.0005, [100, 0], 1 / np.power(10, 8))
+    # ex3(0, 0.0005, [100, 0], 1 / np.power(10, 8))
 
 
 if __name__ == '__main__':
