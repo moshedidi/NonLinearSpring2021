@@ -9,23 +9,28 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.linalg import eigvals
 
 from blur import blur
 
-A, b, x = blur(128, 5, 1)
+dimen = 128
+A, b, original_x = blur(dimen, 5, 1)
 
 
 def f(x):
-    return np.square(np.linalg.norm(np.dot(A, x) - b))
+    return np.square(np.linalg.norm(A.dot(x) - b))
 
 
 def gf(x):
-    temp = np.dot(A, x) - b
-    return 2 * np.dot(A.T, temp)
+    return 2 * A.T.dot(A.dot(x) - b)
+
+
+def const_step(s):
+    return lambda _f, xk, gk: s
 
 
 def exact_quad(A):
-    return lambda _f, xk, gk: 0.5 * np.square(np.linalg.norm(gk)) / np.square(np.linalg.norm(np.dot(A, gk)))
+    return lambda _f, xk, gk: 0.5 * np.square(np.linalg.norm(gk)) / np.square(np.linalg.norm(A.dot(gk)))
 
 
 def generic_grad(f, gf, lsearch, x0, num_of_iterations):
@@ -41,23 +46,51 @@ def generic_grad(f, gf, lsearch, x0, num_of_iterations):
     return xk, fs, gs, ts
 
 
-def q3():
+def q3_a():
     plt.figure(figsize=(6, 6))
-    plt.imshow(x.reshape(128, 128), cmap='gray')
+    plt.imshow(original_x.reshape(dimen, dimen), cmap='gray')
     plt.show()
     plt.figure(figsize=(6, 6))
-    plt.imshow(b.reshape(128, 128), cmap='gray')
+    plt.imshow(b.reshape(dimen, dimen), cmap='gray')
     plt.show()
-    x0 = np.zeros(A.shape[0])
-    xk, fs, gs, ts = generic_grad(f, gf, exact_quad(A), x0, 10)
-    plt.figure(figsize=(6, 6))
-    plt.imshow(xk.reshape(128, 128), cmap='gray')
+    x0 = np.zeros(A.shape[0]).reshape(dimen * dimen, 1)
+
+    plt.figure(figsize=(10, 10))  # specifying the overall grid size
+
+    for i, j in enumerate([1, 10, 100, 1000]):
+        ax = plt.subplot(2, 2, i + 1)  # the number of images in the grid is 5*5 (25)
+        xk, fs, gs, ts = generic_grad(f, gf, exact_quad(A), x0, j)
+        plt.imshow(xk.reshape(dimen, dimen), cmap='gray')
+        ax.set_title(f'{j} iterations')
+
     plt.show()
+
     pass
 
 
+def q3_b():
+    plt.figure(figsize=(6, 6))
+    plt.imshow(original_x.reshape(dimen, dimen), cmap='gray')
+    plt.show()
+    plt.figure(figsize=(6, 6))
+    plt.imshow(b.reshape(dimen, dimen), cmap='gray')
+    plt.show()
+    x0 = np.zeros(A.shape[0]).reshape(dimen * dimen, 1)
+    s = 1 / (2 * np.max(np.linalg.eigvals(A.T.dot(A).toarray())))
+    plt.figure(figsize=(10, 10))  # specifying the overall grid size
+
+    for i, j in enumerate([1, 10, 100, 1000]):
+        ax = plt.subplot(2, 2, i + 1)  # the number of images in the grid is 5*5 (25)
+        xk, fs, gs, ts = generic_grad(f, gf, const_step(s), x0, j)
+        plt.imshow(xk.reshape(dimen, dimen), cmap='gray')
+        ax.set_title(f'{j} iterations')
+
+    plt.show()
+
+
 def main():
-    q3()
+    # q3_a()
+    q3_b()
 
 
 if __name__ == '__main__':
