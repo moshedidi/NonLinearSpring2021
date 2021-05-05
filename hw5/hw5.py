@@ -125,7 +125,7 @@ def q3_d_1():
 
     for i, j in enumerate([1, 10, 100, 1000]):
         ax = plt.subplot(3, 2, i + 1 + 2)
-        # xk, fs, gs, ts = fista(f, gf, L, x0, eps) # TODO: what is the epsilon??
+        # xk, fs, gs, ts = fista(f, gf, L, x0, eps)
         xk, fs, gs, ts = fista(f, gf, L, x0, j)
         plt.imshow(xk.reshape(dimen, dimen), cmap='gray')
         ax.set_title(f'{j} iterations')
