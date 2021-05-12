@@ -9,11 +9,19 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
 from numpy.linalg import eigvals, LinAlgError
+
+""" Q1 """
 
 
 def f(A, b):
     return lambda x: - sum([np.log(b[i] - A[i].T.dot(x)) for i in range(len(b))])
+
+
+def f3(x, y, A, b):
+    return - sum([np.log(b[i] - (A[i][0] * x + A[i][1] * y)) for i in range(len(b))])
 
 
 def df(A, b):
@@ -60,18 +68,35 @@ def test_analytic_center():
     b = np.array([1, 0, 2, 2])
     x0 = np.array([-1.99, 0])
     xs, fs = analytic_center(A, b, x0)
-    fs[(np.isnan(fs))] = 10 ** 10
-    # fs = fs.reshape(xs.T.shape).T
-    fs = fs[::-1]
-    # X, Y = np.meshgrid(np.arange(-2, 0, 0.1), np.arange(-2.5, - 0.5, 0.1))
-    X, Y = np.arange(-2, 0, 0.1), np.arange(-2.5, - 0.5, 0.1)
+    print(xs)
+    print(fs)
+    X, Y = np.meshgrid(np.arange(-2, 0, 0.01), np.arange(-2.5, 0.5, 0.01))
+    Z = X.copy()
 
     f_xk = f(A, b)
-    Z = np.array([f_xk(np.array([xi, yi])) for xi in X for yi in Y])
+    poly_x, poly_y = [], []
+    for i in range(len(X)):
+        for j in range(len(X[0])):
+            Z[i, j] = f_xk((X[i, j], Y[i, j]))
+            # if A.dot(np.array([X[i, j], Y[i, j]])) == b:
+            #     poly_x.append(X[i, j])
+            #     poly_y.append(Y[i, j])
+
     Z[(np.isnan(Z))] = 10 ** 10
-    Z = Z[::-1]
+    # Z = Z[::-1]
     fig, ax = plt.subplots(1, 1)
-    cp = ax.contour([X, Y], Z)
+    cs = ax.contour(X, Y, Z, levels=fs[::-1], extend='both')
+    patches = []
+    polygon = Polygon([[0, 0],
+                       [-1.0604, 0.3072],
+                       [-0.001, 0.1],
+                       [-0.001, -1.98]], True)
+    patches.append(polygon)
+
+    p = PatchCollection(patches, alpha=0.4)
+    ax.scatter(xs[:, 0], xs[:, 1])
+    ax.add_collection(p)
+
     plt.show()
 
 
@@ -157,7 +182,7 @@ def q2():
                        lsearch=hybrid_back(f=f_q2, alpha=0.25, beta=0.5, s=1),
                        xk=np.array([200, 0]).astype('int64'),
                        eps=10 ** -6)
-    #gd = generic_grad(f=f_q2, gf=df_q2, lsearch=back(1 / 4, 1 / 2, 1), x0=np.array([200, 0]).astype('int64'),
+    # gd = generic_grad(f=f_q2, gf=df_q2, lsearch=back(1 / 4, 1 / 2, 1), x0=np.array([200, 0]).astype('int64'),
     #                  eps=10 ** -6)
     plt.loglog(np.arange(1, len(hn[1]) + 1), np.array(hn[1]) + 162, label="hybrid_newton")
     plt.loglog(np.arange(1, len(gd[1]) + 1), np.array(gd[1]) + 162, label="generic grad")
@@ -168,8 +193,8 @@ def q2():
 
 
 def main():
-    # test_analytic_center()
-    q2()
+    test_analytic_center()
+    # q2()
     # x, fs, gs, ts, newton = hybrid_newton(f, gf, hf, lsearch, x0, eps)
 
 
