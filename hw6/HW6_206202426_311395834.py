@@ -63,7 +63,15 @@ def test_analytic_center():
     fs[(np.isnan(fs))] = 10 ** 10
     # fs = fs.reshape(xs.T.shape).T
     fs = fs[::-1]
-    plt.contour(xs, fs)
+    # X, Y = np.meshgrid(np.arange(-2, 0, 0.1), np.arange(-2.5, - 0.5, 0.1))
+    X, Y = np.arange(-2, 0, 0.1), np.arange(-2.5, - 0.5, 0.1)
+
+    f_xk = f(A, b)
+    Z = np.array([f_xk(np.array([xi, yi])) for xi in X for yi in Y])
+    Z[(np.isnan(Z))] = 10 ** 10
+    Z = Z[::-1]
+    fig, ax = plt.subplots(1, 1)
+    cp = ax.contour([X, Y], Z)
     plt.show()
 
 
@@ -99,7 +107,6 @@ def hybrid_back(f, alpha, beta, s):
         else:
             dk = direction[0]
             tk = s
-
             while f(xk + tk * dk) >= f(xk) + alpha * tk * gk.T.dot(dk):
                 tk *= beta
             return tk
@@ -120,15 +127,42 @@ def ddf_q2(x):
                      [- 36, 12 * x[1] ** 2]])
 
 
+def generic_grad(f, gf, lsearch, x0, eps):
+    xk = x0
+    xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk)
+    fs, gs, ts = [f(xk)], [np.linalg.norm(gf(xk))], [time.time()]
+    while np.abs(np.linalg.norm(gf(xk))) > eps:
+        xk = xk_1
+        xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk)
+        fs.append(f(xk))
+        gs.append(np.linalg.norm(gf(xk)))
+        ts.append(time.time())
+    return xk, fs, gs, ts
+
+
+def back(alpha, beta, s):
+    def lsearch(_f, xk, gk):
+        t = s
+        while _f(xk - t * gk) >= _f(xk) - alpha * t * np.square(np.linalg.norm(gk)):
+            t *= beta
+        return t
+
+    return lsearch
+
+
 def q2():
     hn = hybrid_newton(f=f_q2,
                        gf=df_q2,
                        hf=ddf_q2,
                        lsearch=hybrid_back(f=f_q2, alpha=0.25, beta=0.5, s=1),
                        xk=np.array([200, 0]).astype('int64'),
-                       eps=10 ** -25)
-    plt.semilogy(np.arange(1, len(hn[1]) + 1), np.array(hn[1]) + 162, label="hybrid_newton")
-    plt.title("Log Scale of f(x) with respect to iteration")
+                       eps=10 ** -6)
+    #gd = generic_grad(f=f_q2, gf=df_q2, lsearch=back(1 / 4, 1 / 2, 1), x0=np.array([200, 0]).astype('int64'),
+    #                  eps=10 ** -6)
+    plt.loglog(np.arange(1, len(hn[1]) + 1), np.array(hn[1]) + 162, label="hybrid_newton")
+    plt.loglog(np.arange(1, len(gd[1]) + 1), np.array(gd[1]) + 162, label="generic grad")
+    plt.scatter(np.arange(1, len(hn[1]) + 1), hn[4], label="direction type", color="red")
+    plt.title("Log Scale of f(x) with respect to iteration, with iteration type")
     plt.legend()
     plt.show()
 
