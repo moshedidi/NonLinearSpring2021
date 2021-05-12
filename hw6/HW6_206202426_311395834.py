@@ -6,6 +6,7 @@ Created on 07/05/2021
 
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.linalg import eigvals
 
@@ -47,8 +48,7 @@ def analytic_center(A, b, x0):
                            s=2,
                            xk=x0,
                            eps=1 / np.power(10, 6))
-    print(xs)
-    print(fs)
+    return np.array(xs), np.array(fs)
 
 
 def test_analytic_center():
@@ -58,15 +58,20 @@ def test_analytic_center():
                   [-1, -1]])
     b = np.array([1, 0, 2, 2])
     x0 = np.array([-1.99, 0])
-    analytic_center(A, b, x0)
+    xs, fs = analytic_center(A, b, x0)
+    fs[(np.isnan(fs))] = 10 ** 10
+    # fs = fs.reshape(xs.T.shape).T
+    fs = fs[::-1]
+    plt.contour(xs, fs)
+    plt.show()
 
 
 def main():
-    A = np.array([[2, 10]])
-    b = np.array([0])
-    t = f(A, b)
-    print(np.isnan(t(np.array([1, 1]))))
-    # test_analytic_center()
+    # A = np.array([[2, 10]])
+    # b = np.array([0])
+    # t = f(A, b)
+    # print(np.isnan(t(np.array([1, 1]))))
+    test_analytic_center()
 
 
 if __name__ == '__main__':
