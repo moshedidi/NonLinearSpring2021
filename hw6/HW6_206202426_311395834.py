@@ -68,29 +68,24 @@ def test_analytic_center():
     b = np.array([1, 0, 2, 2])
     x0 = np.array([-1.99, 0])
     xs, fs = analytic_center(A, b, x0)
-    print(xs)
-    print(fs)
+
     X, Y = np.meshgrid(np.arange(-2, 0, 0.01), np.arange(-2.5, 0.5, 0.01))
     Z = X.copy()
 
     f_xk = f(A, b)
-    poly_x, poly_y = [], []
     for i in range(len(X)):
         for j in range(len(X[0])):
             Z[i, j] = f_xk((X[i, j], Y[i, j]))
-            # if A.dot(np.array([X[i, j], Y[i, j]])) == b:
-            #     poly_x.append(X[i, j])
-            #     poly_y.append(Y[i, j])
 
     Z[(np.isnan(Z))] = 10 ** 10
-    # Z = Z[::-1]
     fig, ax = plt.subplots(1, 1)
-    cs = ax.contour(X, Y, Z, levels=fs[::-1], extend='both')
+    ax.contour(X, Y, Z, levels=fs[::-1], extend='both')
     patches = []
     polygon = Polygon([[-2, 0],
                        [-1.0604, 0.3072],
                        [-0.001, 0.1],
                        [-0.001, -1.98]], True)
+    # TODO: actually find the poly
     patches.append(polygon)
 
     p = PatchCollection(patches, alpha=0.4)
@@ -98,6 +93,10 @@ def test_analytic_center():
     ax.scatter(xs[:, 0], xs[:, 1], marker='*', color='red')
     ax.plot(xs[:, 0], xs[:, 1], color='black')
     plt.title("Contour of f(x) with {f_xk}")
+    plt.show()
+
+    plt.figure()
+    plt.semilogy(np.arange(len(fs) - 1), np.array(fs[0:len(fs) - 1]) - fs[-1], label="f(xk) - f(xN)")
     plt.show()
 
 
