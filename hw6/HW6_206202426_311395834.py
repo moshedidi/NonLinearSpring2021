@@ -87,16 +87,17 @@ def test_analytic_center():
     fig, ax = plt.subplots(1, 1)
     cs = ax.contour(X, Y, Z, levels=fs[::-1], extend='both')
     patches = []
-    polygon = Polygon([[0, 0],
+    polygon = Polygon([[-2, 0],
                        [-1.0604, 0.3072],
                        [-0.001, 0.1],
                        [-0.001, -1.98]], True)
     patches.append(polygon)
 
     p = PatchCollection(patches, alpha=0.4)
-    ax.scatter(xs[:, 0], xs[:, 1])
     ax.add_collection(p)
-
+    ax.scatter(xs[:, 0], xs[:, 1], marker='*', color='red')
+    ax.plot(xs[:, 0], xs[:, 1], color='black')
+    plt.title("Contour of f(x) with {f_xk}")
     plt.show()
 
 
