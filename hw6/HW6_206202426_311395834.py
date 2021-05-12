@@ -103,15 +103,15 @@ def test_analytic_center():
 """ Q2 """
 
 
-def hybrid_newton(f, gf, hf, lsearch, xk, eps):
+def hybrid_newton(_f, gf, hf, lsearch, xk, eps):
     fs, gs, ts, newton = [], [], [0], []
     while np.linalg.norm(gf(xk)) > eps:
         start_time = time.time()
-        f_xk, df_xk, hf_xk = f(xk), gf(xk), hf(xk)
+        f_xk, df_xk, hf_xk = _f(xk), gf(xk), hf(xk)
         fs.append(f_xk)
         gs.append(df_xk)
         try:
-            np.linalg.cholesky(hf(xk))
+            np.linalg.cholesky(hf_xk)
             dk = np.linalg.solve(hf(xk), -df_xk)
             tk = lsearch(xk, gf(xk), [dk, 'newton'])
             newton.append(1)
@@ -125,14 +125,14 @@ def hybrid_newton(f, gf, hf, lsearch, xk, eps):
     return xk, fs, gs, ts[1:], newton
 
 
-def hybrid_back(f, alpha, beta, s):
+def hybrid_back(_f, alpha, beta, s):
     def lsearch(xk, gk, direction):
         if direction[1] == 'newton':
             return 1
         else:
             dk = direction[0]
             tk = s
-            while f(xk + tk * dk) >= f(xk) + alpha * tk * gk.T.dot(dk):
+            while _f(xk + tk * dk) >= _f(xk) + alpha * tk * gk.T.dot(dk):
                 tk *= beta
             return tk
 
@@ -144,7 +144,8 @@ def f_q2(x):
 
 
 def df_q2(x):
-    return np.array([4 * x[0] ** 3 - 36 * x[1], 4 * x[1] ** 3 - 36 * x[0]])
+    return np.array([4 * x[0] ** 3 - 36 * x[1],
+                     4 * x[1] ** 3 - 36 * x[0]])
 
 
 def ddf_q2(x):
@@ -152,14 +153,14 @@ def ddf_q2(x):
                      [- 36, 12 * x[1] ** 2]])
 
 
-def generic_grad(f, gf, lsearch, x0, eps):
+def generic_grad(_f, gf, lsearch, x0, eps):
     xk = x0
-    xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk)
-    fs, gs, ts = [f(xk)], [np.linalg.norm(gf(xk))], [time.time()]
+    xk_1 = xk - lsearch(_f, xk, gf(xk)) * gf(xk)
+    fs, gs, ts = [_f(xk)], [np.linalg.norm(gf(xk))], [time.time()]
     while np.abs(np.linalg.norm(gf(xk))) > eps:
         xk = xk_1
-        xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk)
-        fs.append(f(xk))
+        xk_1 = xk - lsearch(_f, xk, gf(xk)) * gf(xk)
+        fs.append(_f(xk))
         gs.append(np.linalg.norm(gf(xk)))
         ts.append(time.time())
     return xk, fs, gs, ts
@@ -176,16 +177,16 @@ def back(alpha, beta, s):
 
 
 def q2():
-    hn = hybrid_newton(f=f_q2,
+    hn = hybrid_newton(_f=f_q2,
                        gf=df_q2,
                        hf=ddf_q2,
-                       lsearch=hybrid_back(f=f_q2, alpha=0.25, beta=0.5, s=1),
+                       lsearch=hybrid_back(_f=f_q2, alpha=0.25, beta=0.5, s=1),
                        xk=np.array([200, 0]).astype('int64'),
                        eps=10 ** -6)
     # gd = generic_grad(f=f_q2, gf=df_q2, lsearch=back(1 / 4, 1 / 2, 1), x0=np.array([200, 0]).astype('int64'),
     #                  eps=10 ** -6)
     plt.loglog(np.arange(1, len(hn[1]) + 1), np.array(hn[1]) + 162, label="hybrid_newton")
-    plt.loglog(np.arange(1, len(gd[1]) + 1), np.array(gd[1]) + 162, label="generic grad")
+    # plt.loglog(np.arange(1, len(gd[1]) + 1), np.array(gd[1]) + 162, label="generic grad")
     plt.scatter(np.arange(1, len(hn[1]) + 1), hn[4], label="direction type", color="red")
     plt.title("Log Scale of f(x) with respect to iteration, with iteration type")
     plt.legend()
@@ -193,8 +194,8 @@ def q2():
 
 
 def main():
-    test_analytic_center()
-    # q2()
+    # test_analytic_center()
+    q2()
     # x, fs, gs, ts, newton = hybrid_newton(f, gf, hf, lsearch, x0, eps)
 
 
