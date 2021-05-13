@@ -85,7 +85,7 @@ def test_analytic_center():
                        [-1.0604, 0.3072],
                        [-0.001, 0.1],
                        [-0.001, -1.98]], True)
-    # TODO: actually find the poly
+
     patches.append(polygon)
 
     p = PatchCollection(patches, alpha=0.4)
@@ -96,6 +96,7 @@ def test_analytic_center():
     plt.show()
 
     plt.figure()
+    plt.title("f(xk) - f(xN)")
     plt.semilogy(np.arange(len(fs) - 1), np.array(fs[0:len(fs) - 1]) - fs[-1], label="f(xk) - f(xN)")
     plt.show()
 
@@ -110,18 +111,19 @@ def hybrid_newton(f, gf, hf, lsearch, xk, eps):
         start_time = time.time()
         try:
             np.linalg.cholesky(hf(xk))
-            dk = np.linalg.solve(hf_xk.astype('float64'), -df_xk.astype('float64')).astype('float64')
+            dk = np.linalg.solve(hf_xk, -df_xk)
             tk = lsearch(xk, df_xk, [dk, 'newton'])
             newton.append(1)
         except LinAlgError:
             dk = -df_xk
-            tk = lsearch(xk, df_xk.astype('float64'), [dk, 'grad'])
+            tk = lsearch(xk, df_xk, [dk, 'grad'])
             newton.append(0)
         xk = xk + tk * dk
         f_xk, df_xk, hf_xk = f(xk), gf(xk), hf(xk)
-        fs.append(f_xk.astype('float64'))
-        gs.append(np.linalg.norm(df_xk.astype('float64')))
+        fs.append(f_xk)
+        gs.append(np.linalg.norm(df_xk))
         ts.append(time.time() - start_time + ts[-1])
+    newton.append(1)
     return xk, fs, gs, ts[1:], newton
 
 
@@ -132,7 +134,7 @@ def hybrid_back(f, alpha, beta, s):
         else:
             dk = direction[0]
             tk = s
-            while f(xk + tk * dk).astype('float64') >= f(xk).astype('float64') + alpha * tk * gk.T.dot(dk).astype('float64'):
+            while f(xk + tk * dk) >= f(xk) + alpha * tk * gk.T.dot(dk):
                 tk *= beta
             return tk
 
@@ -140,28 +142,28 @@ def hybrid_back(f, alpha, beta, s):
 
 
 def f_q2(x):
-    return ((np.abs(x[0] ** 4,dtype=np.float64)) + (np.abs(x[1] ** 4,dtype=np.float64)) - (36 * x[0] * x[1]).astype('float64'))
+    return x[0] ** 4 + x[1] ** 4 - 36 * x[0] * x[1]
 
 
 def df_q2(x):
-    return np.array([(4 * x[0] ** 3 - 36 * x[1]).astype('int64'), (4 * x[1] ** 3 - 36 * x[0]).astype('float64')])
+    return np.array([(4 * x[0] ** 3 - 36 * x[1]), (4 * x[1] ** 3 - 36 * x[0])])
 
 
 def ddf_q2(x):
-    return np.array([[(abs(12 * x[0] ** 2)).astype('int64'), -36],
-                     [- 36, (abs(12 * x[1] ** 2)).astype('int64')]])
+    return np.array([[(abs(12 * x[0] ** 2)), -36],
+                     [- 36, (abs(12 * x[1] ** 2))]])
 
 
 def generic_grad(f, gf, lsearch, x0, eps):
     xk = x0
     xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk)
-    f_xk, d_xk = f(xk) , gf(xk)
+    f_xk, d_xk = f(xk), gf(xk)
     fs, gs, ts = [f_xk], [d_xk], [time.time()]
-    while np.abs(np.linalg.norm(gf(xk).astype('float64'))) > eps:
+    while np.abs(np.linalg.norm(gf(xk))) > eps:
         xk = xk_1
-        xk_1 = xk - lsearch(f, xk, gf(xk).astype('float64')) * gf(xk).astype('float64')
-        fs.append(f(xk).astype('float64'))
-        gs.append(np.linalg.norm(gf(xk).astype('float64')))
+        xk_1 = xk - lsearch(f, xk, gf(xk)) * gf(xk)
+        fs.append(f(xk))
+        gs.append(np.linalg.norm(gf(xk)))
         ts.append(time.time())
     return xk, fs, gs, ts
 
@@ -169,7 +171,8 @@ def generic_grad(f, gf, lsearch, x0, eps):
 def back(alpha, beta, s):
     def lsearch(_f, xk, gk):
         t = s
-        while _f(xk - t * gk).astype('float64') > _f(xk).astype('float64') - alpha * t * np.square(np.linalg.norm(gk).astype('float64')):
+        while _f(xk - t * gk) > _f(xk) - alpha * t * np.square(
+                np.linalg.norm(gk)):
             t *= beta
         return t
 
@@ -181,24 +184,24 @@ def q2():
                        gf=df_q2,
                        hf=ddf_q2,
                        lsearch=hybrid_back(f=f_q2, alpha=0.25, beta=0.5, s=1),
-                       xk=np.array([200, 0]).astype('int64'),
+                       xk=np.array([200, 0]).astype('float64'),
                        eps=10 ** -6)
     gd = generic_grad(f=f_q2, gf=df_q2, lsearch=back(1 / 4, 1 / 2, 1), x0=np.array([200, 0]).astype('float64'),
-                     eps=10 ** -6)
-    print(hn[0],hn[1],hn[2])
-    print(gd[0],gd[1],gd[2])
+                      eps=10 ** -6)
+
     plt.semilogy(np.arange(1, len(hn[1]) + 1), np.array(hn[1]) + 162, label="hybrid_newton")
     plt.semilogy(np.arange(1, len(gd[1]) + 1), np.array(gd[1]) + 162, label="generic grad")
-    plt.plot(np.arange(1, len(hn[4]) + 1), hn[4], label="direction type", color="red")
+    hn[4][:] = ['red' if x == 0 else 'blue' for x in hn[4]]
+    plt.scatter(np.arange(1, len(hn[1]) + 1), np.array(hn[1]) + 162, color=hn[4], label="Gradient")
+    plt.scatter(1, -1, color='blue', label="Newton")
     plt.title("Log Scale of f(x) with respect to iteration, with iteration type")
     plt.legend()
     plt.show()
 
 
 def main():
-    # test_analytic_center()
+    test_analytic_center()
     q2()
-    # x, fs, gs, ts, newton = hybrid_newton(f, gf, hf, lsearch, x0, eps)
 
 
 if __name__ == '__main__':
