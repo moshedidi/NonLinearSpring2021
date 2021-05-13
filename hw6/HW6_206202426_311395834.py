@@ -9,11 +9,19 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
 from numpy.linalg import eigvals, LinAlgError
+
+""" Q1 """
 
 
 def f(A, b):
     return lambda x: - sum([np.log(b[i] - A[i].T.dot(x)) for i in range(len(b))])
+
+
+def f3(x, y, A, b):
+    return - sum([np.log(b[i] - (A[i][0] * x + A[i][1] * y)) for i in range(len(b))])
 
 
 def df(A, b):
@@ -60,18 +68,35 @@ def test_analytic_center():
     b = np.array([1, 0, 2, 2])
     x0 = np.array([-1.99, 0])
     xs, fs = analytic_center(A, b, x0)
-    fs[(np.isnan(fs))] = 10 ** 10
-    # fs = fs.reshape(xs.T.shape).T
-    fs = fs[::-1]
-    # X, Y = np.meshgrid(np.arange(-2, 0, 0.1), np.arange(-2.5, - 0.5, 0.1))
-    X, Y = np.arange(-2, 0, 0.1), np.arange(-2.5, - 0.5, 0.1)
+
+    X, Y = np.meshgrid(np.arange(-2, 0, 0.01), np.arange(-2.5, 0.5, 0.01))
+    Z = X.copy()
 
     f_xk = f(A, b)
-    Z = np.array([f_xk(np.array([xi, yi])) for xi in X for yi in Y])
+    for i in range(len(X)):
+        for j in range(len(X[0])):
+            Z[i, j] = f_xk((X[i, j], Y[i, j]))
+
     Z[(np.isnan(Z))] = 10 ** 10
-    Z = Z[::-1]
     fig, ax = plt.subplots(1, 1)
-    cp = ax.contour([X, Y], Z)
+    ax.contour(X, Y, Z, levels=fs[::-1], extend='both')
+    patches = []
+    polygon = Polygon([[-2, 0],
+                       [-1.0604, 0.3072],
+                       [-0.001, 0.1],
+                       [-0.001, -1.98]], True)
+    # TODO: actually find the poly
+    patches.append(polygon)
+
+    p = PatchCollection(patches, alpha=0.4)
+    ax.add_collection(p)
+    ax.scatter(xs[:, 0], xs[:, 1], marker='*', color='red')
+    ax.plot(xs[:, 0], xs[:, 1], color='black')
+    plt.title("Contour of f(x) with {f_xk}")
+    plt.show()
+
+    plt.figure()
+    plt.semilogy(np.arange(len(fs) - 1), np.array(fs[0:len(fs) - 1]) - fs[-1], label="f(xk) - f(xN)")
     plt.show()
 
 
