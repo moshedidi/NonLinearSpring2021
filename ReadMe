@@ -1,0 +1,2 @@
+This project deals with solving types of nonlinear optimization problems.
+The main algorithms used are : Gradient descent (varaiating over the types of it), least squares solving algorithms and convex function optimization problems.
