@@ -91,26 +91,39 @@ def q2_c():
     plt.show()
 
 
+""" q4 """
+
+
+def proj_section_b():
+    return lambda x: np.array([(1 - (x[1] - x[0])) / 2, (1 - (x[1] - x[0])) / 2])
+
+
+def grad_proj(f, gf, proj, t, x0, eps):
+    fs = []
+    xk = x0
+    fs.append(f(x0))
+    xk_1 = proj(xk - t * gf(xk))
+    fs.append(f(xk_1))
+    while np.linalg.norm(xk_1 - xk) > eps:
+        xk = xk_1
+        xk_1 = proj(xk - t * gf(xk))
+        fs.append(f(xk_1))
+    return xk_1, fs
+
+
+def q4():
+    return grad_proj(f=lambda x: np.square(np.linalg.norm(x)),
+                     gf=lambda x: 2 * x,
+                     proj=proj_section_b(),
+                     t=0.5,
+                     x0=np.array([100, 100]),
+                     eps=10 ** -8)
+
+
 def main():
-    # Generate data.
-    m = 20
-    n = 15
-    np.random.seed(1)
-    A = np.random.randn(m, n)
-    b = np.random.randn(m)
-
-    # Define and solve the CVXPY problem.
-    x = cp.Variable(n)
-    cost = cp.sum_squares(A @ x - b)
-    prob = cp.Problem(cp.Minimize(cost))
-    prob.solve()
-
-    # Print result.
-    print("\nThe optimal value is", prob.value)
-    print("The optimal x is")
-    print(x.value)
-    print("The norm of the residual is ", cp.norm(A @ x - b, p=2).value)
+    # q2_c()
+    print(q4())
 
 
 if __name__ == '__main__':
-    q2_c()
+    main()
