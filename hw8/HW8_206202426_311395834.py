@@ -5,9 +5,12 @@ Author:  moshed & eladb
 Created on 26/05/2021
 
 """
+from typing import Tuple
+
 import cvxpy as cp
 import matplotlib.pyplot as plt
 import numpy as np
+from cvxpy import SolverError, SCS
 
 
 def q1_a():
@@ -25,7 +28,7 @@ def q1_a():
     prob = cp.Problem(cp.Minimize(cp.quad_form(x, A) + b.T @ x),
                       [cp.norm(st1 + b_st1) + cp.quad_over_lin(np.array([1, -1, 1]) @ x + 1,
                                                                np.array([1, 1, 0]) @ x) <= 6,
-                       x >= 0])
+                       x >= 1])
     prob.solve()
 
     print("\nThe optimal value is", prob.value)
@@ -37,14 +40,17 @@ def q1_b():
     n = 2
     A = np.array([[1, 1],
                   [1, 1]])
-    b = np.array([0, 2])
-    x = cp.Variable(tuple([n]))
-    prob = cp.Problem(cp.Maximize(cp.quad_form(x, A) + cp.sqrt(b.T @ x + 5) - np.array([2, 3]) @ x),
-                      [cp.quad_over_lin(np.array([1, 0]) @ x, np.array([1, 1]) @ x)
-                       + cp.power(cp.quad_over_lin(np.array([1, 0]) @ x, np.array([0, 1]) @ x) + 1, 8) <= 100,
-                       np.array([1, 1]) @ x >= 4,
-                       x[1] >= 0])
-    prob.solve()
+    x = cp.Variable(tuple([2]))
+    obj = cp.Maximize(-cp.quad_form(x, A) + cp.sqrt(2*x[1] + 5) - 2 * x[0] - 3 * x[1])
+    constraints = [cp.quad_over_lin(x[0], x[0] + x[1])
+                   + cp.power(cp.quad_over_lin(x[0], x[1]) + 1, 8) <= 100,
+                   cp.sum(x) >= 4,
+                   x[1] >= 0]
+    prob = cp.Problem(obj, constraints)
+    try:
+        result = prob.solve()
+    except SolverError:
+        result = prob.solve(solver=SCS)
 
     print("\nThe optimal value is", prob.value)
     print("The optimal x is")
@@ -121,8 +127,8 @@ def q4():
 
 
 def main():
-    # q2_c()
-    print(q4())
+    q1_b()
+    # print(q4())
 
 
 if __name__ == '__main__':
