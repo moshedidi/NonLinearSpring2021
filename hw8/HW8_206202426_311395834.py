@@ -5,7 +5,6 @@ Author:  moshed & eladb
 Created on 26/05/2021
 
 """
-from typing import Tuple
 
 import cvxpy as cp
 import matplotlib.pyplot as plt
@@ -40,7 +39,7 @@ def q1_b():
     n = 2
     A = np.array([[1, 1],
                   [1, 1]])
-    x = cp.Variable(tuple([2]))
+    x = cp.Variable(tuple([n]))
     obj = cp.Maximize(-cp.quad_form(x, A) + cp.sqrt(2*x[1] + 5) - 2 * x[0] - 3 * x[1])
     constraints = [cp.quad_over_lin(x[0], x[0] + x[1])
                    + cp.power(cp.quad_over_lin(x[0], x[1]) + 1, 8) <= 100,
@@ -58,18 +57,14 @@ def q1_b():
 
 
 def q2_c():
-    m, n = 50, 2
-    outliers_num = 10
+    m, n, outliers_num = 50, 2, 10
     np.random.seed(314)
     A = 3000 * np.random.rand(n, m)
     A[:, : outliers_num] += 3000
     p = (10 * np.random.rand(m, 1) + 10).round()
-    alpha = 0.01
-    gamma = 1.2
-    eta1 = 20
-    eta2 = 30
-    mu1 = 2
-    mu2 = 5
+    alpha, gamma = 0.01, 1.2
+    eta1, eta2 = 20, 30
+    mu1, mu2 = 2, 5
 
     x1 = cp.Variable(tuple([n]))
     prob1 = cp.Problem(cp.Minimize(gamma * alpha * (cp.sum([p[i] * cp.norm(A.T[i] - x1) for i in range(m)]))))
@@ -87,13 +82,15 @@ def q2_c():
                                             for i in range(m)]))))
     prob2.solve()
 
+    print('problem with delays')
     print("\nThe optimal value is", prob2.value)
     print("The optimal x is")
     print(x2.value)
 
-    plt.scatter(x1.value[0], x1.value[1], label="Without", color='red')
-    plt.scatter(x2.value[0], x2.value[1], label="with", color='blue')
-    plt.scatter(A[0], A[1], label="pos", color='green')
+    plt.scatter(x1.value[0], x1.value[1], label="Without penalty", color='red')
+    plt.scatter(x2.value[0], x2.value[1], label="With penalty", color='blue')
+    plt.scatter(A[0], A[1], label="Order positions", color='green')
+    plt.legend()
     plt.show()
 
 
@@ -101,7 +98,7 @@ def q2_c():
 
 
 def proj_section_b():
-    return lambda x: np.array([(1 - (x[1] - x[0])) / 2, (1 - (x[1] - x[0])) / 2])
+    return lambda x: np.array([(1 - (x[1] - x[0])) / 2, (1 + (x[1] - x[0])) / 2])
 
 
 def grad_proj(f, gf, proj, t, x0, eps):
@@ -127,8 +124,13 @@ def q4():
 
 
 def main():
+    print('----Q1----')
+    q1_a()
     q1_b()
-    # print(q4())
+    print('----Q2----')
+    q2_c()
+    print('----Q4----')
+    print(q4())
 
 
 if __name__ == '__main__':
