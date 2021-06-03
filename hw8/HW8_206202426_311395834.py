@@ -26,7 +26,7 @@ def q1_a():
 
     x = cp.Variable(tuple([n]))
     prob = cp.Problem(cp.Minimize(cp.quad_form(x, A) + b.T @ x),
-                      [cp.norm(st1 + b_st1) + cp.quad_over_lin(np.array([1, -1, 1]) @ x + 1,
+                      [cp.norm(st1@x + b_st1) + cp.quad_over_lin(np.array([1, -1, 1]) @ x + 1,
                                                                np.array([1, 1, 0]) @ x) <= 6,
                        x >= 1])
     prob.solve()
@@ -127,7 +127,7 @@ def q4():
 
 
 def main():
-    q1_b()
+    q1_a()
     # print(q4())
 
 
