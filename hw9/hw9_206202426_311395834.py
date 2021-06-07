@@ -7,11 +7,11 @@ Created on 26/05/2021
 import numpy as np
 import pandas as pd
 from scipy.sparse.linalg import eigs
-import matplotlib.pyplot as plt
-
+from matplotlib import pyplot as plt
 
 def pca_project(X, k):
     #### d ####
+    X = np.array(X)
     X_bar = np.zeros(X.shape[1])
     proj = []
     for j in range(X.shape[1]):
@@ -24,14 +24,21 @@ def pca_project(X, k):
     for vector in sortedEigenVectors:
         for j in range(X.shape[1]):
             proj.append(X_centerd[:, j].dot(vector))
-    proj = np.array(proj).reshape((k,X.shape[1]))
+    proj = np.array(proj).reshape((k, X.shape[1]))
     return proj
 
-def plot_sectors(proj,sectors,sectors_to_plot):
-    df = pd.concat([proj, sectors], axis=1)
-    df = df.loc[df['sector'].isin(sectors_to_plot)]
-    df = df[df.columns[2]]
-    plt.scatter(proj)
+
+def plot_sectors(proj, sectors, sectors_to_plot):
+    df = pd.concat([pd.DataFrame(proj).T, sectors], axis=1)
+    df = df.loc[df['GICS Sector'].isin(sectors_to_plot)]
+
+    fig, ax = plt.subplots()
+    ax.margins(0.05)  # Optional, just adds 5% padding to the autoscaling
+    for name, group in df.groupby('GICS Sector'):
+        ax.plot(group[0], group[1], marker='o', linestyle='', label=name)
+    ax.legend()
+
+    plt.show()
 
 
 def load_shares():
@@ -47,7 +54,7 @@ def load_shares():
         "GICS Sector"]
     dataOnlyFull2016 = pd.merge(symbolsDataFrame, prices_2016, on='symbol', how="inner")
     prices = [df_symbol['close'] for symbol, df_symbol in dataOnlyFull2016.groupby("symbol")]
-    return symbols, pd.DataFrame(prices), sectors
+    return symbols, pd.DataFrame(np.array(prices)), sectors
 
 
 def q1():
@@ -62,10 +69,11 @@ def q1():
     # apple_close_prices.plot()
     # plt.show()
     # c TODO: explain in word
-    #e#
+    # e#
     _, prices, sectors = load_shares()
-    proj = pca_project(prices, 2)
-    plot_sectors(proj, sectors, ['Energy', 'InformationTechnology'])
+    proj = pca_project(prices.T, 2)
+    plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
+
 
 def main():
     q1()
