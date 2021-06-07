@@ -72,9 +72,33 @@ def q1():
     # c TODO: explain in word
 
     """ Q1 E """
-    _, prices, sectors = load_shares()
-    proj = pca_project(prices.T, 2)
-    plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
+    symbols, prices, sectors = load_shares()
+    # proj = pca_project(prices.T, 2)
+    # plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
+
+    """F"""
+    modifies_prices = (prices.apply(lambda x: ln_transformation(x))).T
+    proj_modified = pca_project(modifies_prices, 2)
+    # plot_sectors(proj_modified, sectors, ['Energy', 'Information Technology'])
+
+    """ G """
+    # plot_sectors(proj_modified, sectors, ['Energy', 'Information Technology','Real Estate'])
+
+    """ H """
+    # proj_data = pd.DataFrame(proj_modified.T)
+    # proj_data_special = proj_data.loc[proj_modified[0]<-56]
+    # special_stock_symbol = symbols[proj_data_special.index[0]]
+    # plot_sectors(proj_modified, sectors, sectors)
+
+    symbols_close_prices_data = pd.concat([pd.DataFrame(symbols), prices], axis=1)
+    ZTS_close_prices = symbols_close_prices_data[symbols_close_prices_data["symbol"] == 'ZTS'].T[1:]
+    ZTS_close_prices.plot()
+    plt.legend("ZTS Stock")
+    plt.show()
+def ln_transformation(x):
+    for i in range(len(x) - 1):
+        x[i] = np.log(x[i + 1]) - np.log(x[i])
+    return x
 
 
 def main():
