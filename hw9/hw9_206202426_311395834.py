@@ -6,11 +6,12 @@ Created on 26/05/2021
 
 import numpy as np
 import pandas as pd
-from scipy.sparse.linalg import eigs
 from matplotlib import pyplot as plt
+from scipy.sparse.linalg import eigs
+
 
 def pca_project(X, k):
-    #### d ####
+    """ Q1 D """
     X = np.array(X)
     X_bar = np.zeros(X.shape[1])
     proj = []
@@ -33,7 +34,7 @@ def plot_sectors(proj, sectors, sectors_to_plot):
     df = df.loc[df['GICS Sector'].isin(sectors_to_plot)]
 
     fig, ax = plt.subplots()
-    ax.margins(0.05)  # Optional, just adds 5% padding to the autoscaling
+    ax.margins(0.05)
     for name, group in df.groupby('GICS Sector'):
         ax.plot(group[0], group[1], marker='o', linestyle='', label=name)
     ax.legend()
@@ -42,7 +43,7 @@ def plot_sectors(proj, sectors, sectors_to_plot):
 
 
 def load_shares():
-    #### C ###
+    """ Q1 C """
     prices_data = pd.read_csv('prices.csv')
     securities_data = pd.read_csv('securities.csv')
     mask = prices_data['date'].apply(lambda x: x[:4] == '2016')
@@ -58,7 +59,7 @@ def load_shares():
 
 
 def q1():
-    # # a TODO: explain in word
+    """ Q1 A """
     # df = pd.read_csv('prices.csv')
     # df.head(5)
     # # b TODO: explain in word
@@ -69,7 +70,8 @@ def q1():
     # apple_close_prices.plot()
     # plt.show()
     # c TODO: explain in word
-    # e#
+
+    """ Q1 E """
     _, prices, sectors = load_shares()
     proj = pca_project(prices.T, 2)
     plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
