@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 def pca_project(X, k):
     #### d ####
-    X_bar = np.zeros(X.shape[0])
+    X_bar = np.zeros(X.shape[1])
     proj = []
     for j in range(X.shape[1]):
         X_bar[j] = np.average(X[:, j])
@@ -20,13 +20,18 @@ def pca_project(X, k):
     XX_T = X_centerd.dot(X_centerd.T)
     eigen = eigs(XX_T, k)[0].real
     vectors = eigs(XX_T, k)[1].real
-    sortedEigenVectors = [x for _, x in sorted(zip(eigen, vectors), reverse=True)]
+    sortedEigenVectors = [x for _, x in sorted(zip(eigen, vectors.T), reverse=True)]
     for vector in sortedEigenVectors:
         for j in range(X.shape[1]):
             proj.append(X_centerd[:, j].dot(vector))
-    np.array(proj).reshape((k,X.shape[1]))
+    proj = np.array(proj).reshape((k,X.shape[1]))
+    return proj
 
-    print("good")
+def plot_sectors(proj,sectors,sectors_to_plot):
+    df = pd.concat([proj, sectors], axis=1)
+    df = df.loc[df['sector'].isin(sectors_to_plot)]
+    df = df[df.columns[2]]
+    plt.scatter(proj)
 
 
 def load_shares():
@@ -42,31 +47,33 @@ def load_shares():
         "GICS Sector"]
     dataOnlyFull2016 = pd.merge(symbolsDataFrame, prices_2016, on='symbol', how="inner")
     prices = [df_symbol['close'] for symbol, df_symbol in dataOnlyFull2016.groupby("symbol")]
-    return symbols, prices, sectors
+    return symbols, pd.DataFrame(prices), sectors
 
 
 def q1():
-    load_shares()
-    # a TODO: explain in word
-    df = pd.read_csv('prices.csv')
-    df.head(5)
-    # b TODO: explain in word
-    mask = df['date'].apply(lambda x: x[:4] == '2016')
-    df = df[mask]
-    df = df[df['symbol'] == 'AAPL'].reset_index()
-    apple_close_prices = df.close
-    apple_close_prices.plot()
+    # # a TODO: explain in word
+    # df = pd.read_csv('prices.csv')
+    # df.head(5)
+    # # b TODO: explain in word
+    # mask = df['date'].apply(lambda x: x[:4] == '2016')
+    # df = df[mask]
+    # df = df[df['symbol'] == 'AAPL'].reset_index()
+    # apple_close_prices = df.close
+    # apple_close_prices.plot()
     # plt.show()
     # c TODO: explain in word
-
+    #e#
+    _, prices, sectors = load_shares()
+    proj = pca_project(prices, 2)
+    plot_sectors(proj, sectors, ['Energy', 'InformationTechnology'])
 
 def main():
-    # q1()
-    X = np.array([[0, 0, 0],
-                  [3, 3, 5],
-                  [6, 8, 6],
-                  [9, 7, 9]])
-    pca_project(X, 2)
+    q1()
+    # X = np.array([[0, 0, 0],
+    #               [3, 3, 5],
+    #               [6, 8, 6],
+    #               [9, 7, 9]])
+    # proj = pca_project(X, 2)
 
 
 if __name__ == '__main__':
