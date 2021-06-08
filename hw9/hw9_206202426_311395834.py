@@ -33,15 +33,17 @@ def pca_project(X, k):
     X = np.array(X)
     proj = []
     X_centerd = X - np.mean(X, axis=0)
-    XTX = np.dot(X_centerd.T,X_centerd)
+    XTX = np.dot(X_centerd.T, X_centerd)
     eigen = eigs(XTX, k)[0].real
     vectors = eigs(XTX, k)[1].real
     sortedEigenVectors = [x for _, x in sorted(zip(eigen, vectors.T), reverse=True)]
-    for i in range(X.shape[0]):
-        for vector in sortedEigenVectors:
-            proj.append(X_centerd[i, :].dot(vector))
-    proj = np.array(proj).reshape((X.shape[0],k))
+    # for i in range(X.shape[0]):
+    #     for vector in sortedEigenVectors:
+    #         proj.append(X_centerd[i, :].dot(vector))
+    # proj = np.array(proj).reshape((X.shape[0], k))
+    proj = (np.array(sortedEigenVectors).dot(X_centerd.T)).T
     return proj
+
 
 def plot_sectors(proj, sectors, sectors_to_plot):
     df = pd.concat([pd.DataFrame(proj), sectors], axis=1)
@@ -86,7 +88,7 @@ def q1():
     """ Q1 E """
     symbols, prices, sectors = load_shares()
     proj = pca_project(prices, 2)
-    # plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
+    plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
 
     """F"""
     modifies_prices = (prices.apply(lambda x: ln_transformation(x))).T
