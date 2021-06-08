@@ -10,37 +10,14 @@ from matplotlib import pyplot as plt
 from scipy.sparse.linalg import eigs
 
 
-# def pca_project(X, k):
-#     """ Q1 D """
-#     X = np.array(X)
-#     X_bar = np.zeros(X.shape[1])
-#     proj = []
-#     for j in range(X.shape[1]):
-#         X_bar[j] = np.average(X[:, j])
-#     X_centerd = X - X_bar
-#     XX_T = np.dot(X_centerd,X_centerd.T)
-#     eigen = eigs(XX_T, k)[0].real
-#     vectors = eigs(XX_T, k)[1].real
-#     sortedEigenVectors = [x for _, x in sorted(zip(eigen, vectors.T), reverse=True)]
-#     for j in range(X.shape[1]):
-#         for vector in sortedEigenVectors:
-#             proj.append(X_centerd[:, j].dot(vector))
-#     proj = np.array(proj).reshape((k, X.shape[1]),order='F')
-#     return proj
-
 def pca_project(X, k):
     """ Q1 D """
     X = np.array(X)
-    proj = []
     X_centerd = X - np.mean(X, axis=0)
     XTX = np.dot(X_centerd.T, X_centerd)
     eigen = eigs(XTX, k)[0].real
     vectors = eigs(XTX, k)[1].real
     sortedEigenVectors = [x for _, x in sorted(zip(eigen, vectors.T), reverse=True)]
-    # for i in range(X.shape[0]):
-    #     for vector in sortedEigenVectors:
-    #         proj.append(X_centerd[i, :].dot(vector))
-    # proj = np.array(proj).reshape((X.shape[0], k))
     proj = (np.array(sortedEigenVectors).dot(X_centerd.T)).T
     return proj
 
@@ -83,37 +60,44 @@ def q1():
     # apple_close_prices = df.close
     # apple_close_prices.plot()
     # plt.show()
-    # c TODO: explain in word
+    # c
+
 
     """ Q1 E """
     symbols, prices, sectors = load_shares()
-    proj = pca_project(prices, 2)
-    plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
+    # proj = pca_project(prices, 2)
+    # plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
 
     """F"""
-    modifies_prices = (prices.apply(lambda x: ln_transformation(x))).T
+    modifies_prices = np.copy(prices)
+
+
+    modifies_prices = pd.DataFrame(modifies_prices).apply(lambda x: ln_transformation(x), axis=1).iloc[:, :-1]
     proj_modified = pca_project(modifies_prices, 2)
-    # plot_sectors(proj_modified, sectors, ['Energy', 'Information Technology'])
+    plot_sectors(proj_modified, sectors, ['Energy', 'Information Technology'])
+    plot_sectors(proj_modified, sectors, ['Financials', 'Information Technology'])
 
     """ G """
-    # plot_sectors(proj_modified, sectors, ['Energy', 'Information Technology','Real Estate'])
+    plot_sectors(proj_modified, sectors, ['Energy', 'Information Technology','Real Estate'])
 
     """ H """
-    proj_data = pd.DataFrame(proj_modified.T)
-    # proj_data_special = proj_data.loc[proj_modified[0]<-56]
-    # special_stock_symbol = symbols[proj_data_special.index[0]]
     plot_sectors(proj_modified, sectors, sectors)
 
+    proj_data = pd.DataFrame(proj_modified)
+    proj_data_special = proj_data.loc[proj_data[1] < -1]
+    special_stock_symbol = symbols[proj_data_special.index[0]]
     symbols_close_prices_data = pd.concat([pd.DataFrame(symbols), prices], axis=1)
-    ZTS_close_prices = symbols_close_prices_data[symbols_close_prices_data["symbol"] == 'ZTS'].T[1:]
-    ZTS_close_prices.plot()
-    plt.legend("ZTS Stock")
+    ICE_APPLE_close_prices = symbols_close_prices_data[symbols_close_prices_data["symbol"].isin([special_stock_symbol,"AAPL"])].T[1:]
+    plt.plot(np.array(ICE_APPLE_close_prices.T.iloc[0]),label="AAPL Stock")
+    plt.plot(np.array(ICE_APPLE_close_prices.T.iloc[1]),label="ICE Stock")
+    plt.legend()
     plt.show()
 
 
 def ln_transformation(x):
-    for i in range(len(x) - 1):
-        x[i] = np.log(x[i + 1]) - np.log(x[i])
+    size_of_row = len(x)
+    for i in range(size_of_row - 1):
+        x[i] = np.log(x[i + 1] / x[i])
     return x
 
 
