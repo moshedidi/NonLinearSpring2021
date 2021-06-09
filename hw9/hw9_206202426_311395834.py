@@ -51,45 +51,44 @@ def load_shares():
 
 def q1():
     """ Q1 A """
-    # df = pd.read_csv('prices.csv')
-    # df.head(5)
-    # # b TODO: explain in word
-    # mask = df['date'].apply(lambda x: x[:4] == '2016')
-    # df = df[mask]
-    # df = df[df['symbol'] == 'AAPL'].reset_index()
-    # apple_close_prices = df.close
-    # apple_close_prices.plot()
-    # plt.show()
-    # c
+    df = pd.read_csv('prices.csv')
+    df.head(5)
 
+    """ Q1 B """
+    mask = df['date'].apply(lambda x: x[:4] == '2016')
+    df = df[mask]
+    df = df[df['symbol'] == 'AAPL'].reset_index()
+    apple_close_prices = df.close
+    apple_close_prices.plot()
+    plt.show()
 
     """ Q1 E """
     symbols, prices, sectors = load_shares()
-    # proj = pca_project(prices, 2)
-    # plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
+    proj = pca_project(prices, 2)
+    plot_sectors(proj, sectors, ['Energy', 'Information Technology'])
 
-    """F"""
+    """ Q1 F """
     modifies_prices = np.copy(prices)
-
 
     modifies_prices = pd.DataFrame(modifies_prices).apply(lambda x: ln_transformation(x), axis=1).iloc[:, :-1]
     proj_modified = pca_project(modifies_prices, 2)
     plot_sectors(proj_modified, sectors, ['Energy', 'Information Technology'])
     plot_sectors(proj_modified, sectors, ['Financials', 'Information Technology'])
 
-    """ G """
-    plot_sectors(proj_modified, sectors, ['Energy', 'Information Technology','Real Estate'])
+    """ Q1 G """
+    plot_sectors(proj_modified, sectors, ['Energy', 'Information Technology', 'Real Estate'])
 
-    """ H """
+    """ Q1 H """
     plot_sectors(proj_modified, sectors, sectors)
 
     proj_data = pd.DataFrame(proj_modified)
     proj_data_special = proj_data.loc[proj_data[1] < -1]
     special_stock_symbol = symbols[proj_data_special.index[0]]
     symbols_close_prices_data = pd.concat([pd.DataFrame(symbols), prices], axis=1)
-    ICE_APPLE_close_prices = symbols_close_prices_data[symbols_close_prices_data["symbol"].isin([special_stock_symbol,"AAPL"])].T[1:]
-    plt.plot(np.array(ICE_APPLE_close_prices.T.iloc[0]),label="AAPL Stock")
-    plt.plot(np.array(ICE_APPLE_close_prices.T.iloc[1]),label="ICE Stock")
+    ICE_APPLE_close_prices = symbols_close_prices_data[
+                                 symbols_close_prices_data["symbol"].isin([special_stock_symbol, "AAPL"])].T[1:]
+    plt.plot(np.array(ICE_APPLE_close_prices.T.iloc[0]), label="AAPL Stock")
+    plt.plot(np.array(ICE_APPLE_close_prices.T.iloc[1]), label="ICE Stock")
     plt.legend()
     plt.show()
 
